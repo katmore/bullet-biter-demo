@@ -13,3 +13,7 @@ Catch helicopter shells in your teeth and spit them back.
 - R: restart
 
 Touch controls appear automatically on touch devices and small screens.
+
+## License
+
+[AGPLv3](LICENSE)
