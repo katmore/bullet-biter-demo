@@ -1,0 +1,1044 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#12101c">
+  <meta name="description" content="A fearless duck catches helicopter shells in her beak and spits them back.">
+  <title>Helicopter Bullet Biter</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='5' fill='%2312101c'/%3E%3Cpath d='M4 9h24v4H4zm10-5h4v5h-4z' fill='%23f6c344'/%3E%3Cpath d='M7 14h18v8H7zm4 8h10v4H11z' fill='%235ac7d6'/%3E%3Ccircle cx='10' cy='26' r='2' fill='%23ef5b5b'/%3E%3Ccircle cx='22' cy='26' r='2' fill='%23ef5b5b'/%3E%3C/svg%3E">
+  <style>
+    :root {
+      color-scheme: dark;
+      --ink: #12101c;
+      --panel: #1d1930;
+      --panel-2: #292344;
+      --cream: #fff1c9;
+      --muted: #b9abd2;
+      --sky: #5ac7d6;
+      --sun: #f6c344;
+      --danger: #ef5b5b;
+      --good: #72d572;
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body { min-height: 100%; }
+
+    body {
+      margin: 0;
+      overflow-x: hidden;
+      background:
+        radial-gradient(circle at 50% -20%, #40366a 0, transparent 48%),
+        repeating-linear-gradient(0deg, transparent 0 3px, rgba(255,255,255,.014) 3px 4px),
+        var(--ink);
+      color: var(--cream);
+      font-family: ui-monospace, "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+      min-height: 100dvh;
+      display: grid;
+      place-items: center;
+      padding: clamp(12px, 3vw, 30px);
+      touch-action: manipulation;
+      user-select: none;
+    }
+
+    main {
+      width: min(100%, 1060px);
+      display: grid;
+      gap: 14px;
+    }
+
+    .masthead {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(1.15rem, 3.6vw, 2rem);
+      line-height: 1;
+      letter-spacing: .045em;
+      text-transform: uppercase;
+      text-shadow: 3px 3px 0 #6b3154;
+    }
+
+    .tag {
+      margin: 0;
+      color: var(--sun);
+      font-size: clamp(.78rem, 2.2vw, .95rem);
+      line-height: 1.25;
+      text-align: right;
+    }
+
+    .cabinet {
+      position: relative;
+      overflow: hidden;
+      border: 4px solid var(--cream);
+      border-radius: 4px;
+      background: #080712;
+      box-shadow:
+        0 0 0 5px #4d416e,
+        0 0 0 9px #090812,
+        0 18px 60px rgba(0,0,0,.55);
+    }
+
+    .cabinet::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background: repeating-linear-gradient(0deg, transparent 0 3px, rgba(13,9,25,.11) 3px 4px);
+      mix-blend-mode: multiply;
+      z-index: 3;
+    }
+
+    canvas {
+      display: block;
+      width: 100%;
+      height: auto;
+      aspect-ratio: 16 / 9;
+      image-rendering: pixelated;
+      image-rendering: crisp-edges;
+      background: #58c6d8;
+    }
+
+    .touch-controls {
+      display: none;
+      grid-template-columns: 1fr 1fr 1.3fr 1fr 1fr;
+      gap: 10px;
+    }
+
+    .touch-controls button,
+    .restart-button {
+      min-height: 54px;
+      border: 3px solid var(--cream);
+      border-radius: 3px;
+      background: var(--panel-2);
+      color: var(--cream);
+      font: 800 .95rem/1 ui-monospace, "SFMono-Regular", Consolas, monospace;
+      text-transform: uppercase;
+      box-shadow: inset 0 -5px 0 rgba(0,0,0,.3), 0 5px 0 #090812;
+      cursor: pointer;
+    }
+
+    .touch-controls button:active,
+    .touch-controls button.active,
+    .restart-button:active {
+      transform: translateY(4px);
+      box-shadow: inset 0 -2px 0 rgba(0,0,0,.3), 0 1px 0 #090812;
+      background: #4d416e;
+    }
+
+    .touch-controls .action { color: var(--sun); }
+    .touch-controls .aim { color: var(--sky); }
+
+    .underbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      color: var(--muted);
+      font-size: clamp(.76rem, 2vw, .9rem);
+      line-height: 1.45;
+    }
+
+    .underbar p { margin: 0; }
+    .underbar strong { color: var(--cream); }
+    .restart-button { display: none; min-height: 42px; padding: 0 20px; }
+
+    @media (pointer: coarse), (max-width: 720px) {
+      body { place-items: start center; padding: 12px; }
+      .touch-controls { display: grid; }
+      .underbar { align-items: flex-start; }
+      .underbar p:first-child { display: none; }
+      .restart-button { display: block; }
+    }
+
+    @media (max-width: 500px) {
+      .masthead { align-items: flex-start; }
+      .tag { max-width: 13ch; }
+      .cabinet { border-width: 3px; }
+      .touch-controls { gap: 7px; }
+      .touch-controls button { min-height: 50px; font-size: .84rem; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      * { scroll-behavior: auto !important; }
+    }
+
+</style>
+</head>
+<body>
+  <main>
+    <header class="masthead">
+      <h1>Helicopter<br>Bullet Biter</h1>
+      <p class="tag">Catch it.<br>Chomp it.<br>Send it back.</p>
+    </header>
+
+    <section class="cabinet" aria-label="Helicopter Bullet Biter game">
+      <canvas id="game" width="480" height="270" role="img" aria-label="A pixel arcade game where an anthropomorphic duck protects five village huts by catching shells in her beak and spitting them at a white Huey helicopter"></canvas>
+    </section>
+
+    <section class="touch-controls" aria-label="Touch controls">
+      <button data-control="left" aria-label="Move left">◀ Left</button>
+      <button data-control="right" aria-label="Move right">Right ▶</button>
+      <button class="action" data-control="action" aria-label="Bite or spit">Bite / Spit</button>
+      <button class="aim" data-control="aimCCW" aria-label="Rotate aim counterclockwise">Aim ↺</button>
+      <button class="aim" data-control="aimCW" aria-label="Rotate aim clockwise">Aim ↻</button>
+    </section>
+
+    <div class="underbar">
+      <p><strong>A / D</strong> move · <strong>Space / Z</strong> bite &amp; spit · <strong>W / S</strong> rotate aim · point to aim · <strong>R</strong> restart</p>
+      <p>Face the incoming shell. Bite at the last moment.</p>
+      <button class="restart-button" type="button">Restart</button>
+    </div>
+  </main>
+
+  <script>
+(() => {
+  // src/js/domain/game-rules.js
+  var WORLD = Object.freeze({
+    width: 480,
+    height: 270,
+    groundY: 226,
+    playerMinX: 19,
+    playerMaxX: 461,
+    hutCount: 5
+  });
+  var clamp = (value, minimum, maximum) => Math.max(minimum, Math.min(maximum, value));
+  function constrainAim(angle) {
+    return clamp(angle, 0, Math.PI);
+  }
+  function constrainPlayerX(x) {
+    return clamp(x, WORLD.playerMinX, WORLD.playerMaxX);
+  }
+  function mouthPosition(player) {
+    return { x: player.x + player.facing * 20, y: player.y - 27 };
+  }
+  function overlapsCircleRect(circleX, circleY, radius, rectX, rectY, rectWidth, rectHeight) {
+    const closestX = clamp(circleX, rectX, rectX + rectWidth);
+    const closestY = clamp(circleY, rectY, rectY + rectHeight);
+    return (circleX - closestX) ** 2 + (circleY - closestY) ** 2 <= radius ** 2;
+  }
+  function canCatchIncomingShell(shell, player) {
+    if (player.mouth !== "biting" || shell.state !== "incoming") return false;
+    const mouth = mouthPosition(player);
+    const isOnFacedSide = (shell.x - player.x) * player.facing >= -3;
+    const isComingFromFront = shell.vx * player.facing < 0;
+    const isInCatchZone = overlapsCircleRect(shell.x, shell.y, 5, mouth.x - 14, mouth.y - 9, 28, 18);
+    return isOnFacedSide && isComingFromFront && isInCatchZone;
+  }
+  function hutMissOutcome(hutsOnFire, hutCount = WORLD.hutCount) {
+    const hutIndex = Math.min(hutsOnFire, hutCount - 1);
+    const nextHutsOnFire = Math.min(hutCount, hutsOnFire + 1);
+    return {
+      hutIndex,
+      hutsOnFire: nextHutsOnFire,
+      isDefeat: nextHutsOnFire >= hutCount
+    };
+  }
+  function helicopterHitOutcome(health) {
+    const nextHealth = Math.max(0, health - 1);
+    return { health: nextHealth, isFatal: nextHealth === 0 };
+  }
+
+  // src/js/domain/game-state.js
+  function createGameState() {
+    return {
+      time: 0,
+      state: "intro",
+      player: {
+        x: 116,
+        y: WORLD.groundY,
+        facing: 1,
+        mouth: "ready",
+        mouthTimer: 0,
+        flash: 0,
+        recoil: 0,
+        knockback: 0,
+        anim: 0,
+        aimAngle: 35 * Math.PI / 180
+      },
+      heli: {
+        x: 354,
+        y: 55,
+        dir: -1,
+        health: 2,
+        mode: "wait",
+        timer: 1,
+        flash: 0,
+        hitFlash: 0,
+        rotor: 0,
+        smokeClock: 0,
+        crashSpeed: 0
+      },
+      shell: null,
+      hutsOnFire: 0,
+      particles: [],
+      crashTimer: 0,
+      endTimer: 0
+    };
+  }
+  function advancePlayer(player, input, dt) {
+    let movement = 0;
+    if (input.left) movement--;
+    if (input.right) movement++;
+    if (movement) player.facing = movement;
+    const speed = player.mouth === "holding" ? 100 : 125;
+    if (Math.abs(player.knockback) > 0.01) {
+      player.x += player.knockback * 95 * dt;
+      player.knockback *= Math.pow(0.015, dt);
+    } else {
+      player.knockback = 0;
+      player.x += movement * speed * dt;
+    }
+    player.x = constrainPlayerX(player.x);
+    player.anim += Math.abs(movement) * dt * 13;
+    if (player.mouth === "holding") {
+      const turn = (input.aimCCW ? 1 : 0) - (input.aimCW ? 1 : 0);
+      player.aimAngle = constrainAim(player.aimAngle + turn * Math.PI * 0.7 * dt);
+      player.facing = Math.cos(player.aimAngle) >= 0 ? 1 : -1;
+    }
+  }
+  function advanceMouthState(player, dt) {
+    if (player.mouth !== "biting" && player.mouth !== "recovering") return;
+    player.mouthTimer -= dt;
+    if (player.mouthTimer > 0) return;
+    if (player.mouth === "biting") {
+      player.mouth = "recovering";
+      player.mouthTimer = 0.22;
+    } else {
+      player.mouth = "ready";
+      player.mouthTimer = 0;
+    }
+  }
+  function syncHeldShell(shell, player) {
+    const mouth = mouthPosition(player);
+    shell.x = mouth.x + player.facing * 4;
+    shell.y = mouth.y;
+    shell.rot = player.facing > 0 ? 0 : Math.PI;
+  }
+
+  // src/js/core.js
+  var canvas = document.querySelector("#game");
+  var ctx = canvas.getContext("2d", { alpha: false });
+  ctx.imageSmoothingEnabled = false;
+  var W = WORLD.width;
+  var H = WORLD.height;
+  var GROUND_Y = WORLD.groundY;
+  var HUT_XS = [16, 109, 202, 295, 388];
+  var COLORS = {
+    ink: "#12101c",
+    deep: "#292344",
+    purple: "#4d416e",
+    cream: "#fff1c9",
+    sky: "#5ac7d6",
+    sky2: "#3fa3bd",
+    sun: "#f6c344",
+    orange: "#e98d3f",
+    danger: "#ef5b5b",
+    redDark: "#8f304a",
+    green: "#72d572",
+    ground: "#7a5a47",
+    dirt: "#493b3a",
+    smoke: "#645b73",
+    white: "#fffaf0"
+  };
+  var keys = { left: false, right: false, aimCCW: false, aimCW: false };
+  var game = {};
+  var runtime = { shake: 0 };
+  var audioContext = null;
+  var random = (min, max) => min + Math.random() * (max - min);
+  function reset() {
+    Object.assign(game, createGameState());
+    runtime.shake = 0;
+  }
+  function beep(frequency, duration, type = "square", volume = 0.035, slide = 0) {
+    try {
+      audioContext || (audioContext = new (window.AudioContext || window.webkitAudioContext)());
+      if (audioContext.state === "suspended") audioContext.resume();
+      const osc = audioContext.createOscillator();
+      const gain = audioContext.createGain();
+      const now = audioContext.currentTime;
+      osc.type = type;
+      osc.frequency.setValueAtTime(frequency, now);
+      osc.frequency.linearRampToValueAtTime(Math.max(40, frequency + slide), now + duration);
+      gain.gain.setValueAtTime(volume, now);
+      gain.gain.exponentialRampToValueAtTime(1e-4, now + duration);
+      osc.connect(gain).connect(audioContext.destination);
+      osc.start(now);
+      osc.stop(now + duration);
+    } catch (_) {
+    }
+  }
+  function burst(x, y, colors, count, speed = 70, size = 3) {
+    for (let i = 0; i < count; i++) {
+      const a = random(0, Math.PI * 2);
+      const s = random(speed * 0.35, speed);
+      game.particles.push({
+        x,
+        y,
+        vx: Math.cos(a) * s,
+        vy: Math.sin(a) * s,
+        life: random(0.3, 0.8),
+        maxLife: 0.8,
+        color: colors[Math.random() * colors.length | 0],
+        size: random(1, size),
+        gravity: 80
+      });
+    }
+  }
+  function smokePuff(x, y) {
+    game.particles.push({
+      x,
+      y,
+      vx: random(-7, 2),
+      vy: random(-18, -8),
+      life: random(0.65, 1.25),
+      maxLife: 1.25,
+      color: Math.random() < 0.5 ? COLORS.smoke : COLORS.deep,
+      size: random(3, 6),
+      gravity: -2
+    });
+  }
+
+  // src/js/gameplay.js
+  function mouthPosition2() {
+    return mouthPosition(game.player);
+  }
+  function startGame() {
+    if (game.state !== "intro") return false;
+    game.state = "playing";
+    return true;
+  }
+  function action() {
+    if (game.state === "intro") {
+      startGame();
+      return;
+    }
+    if (game.state === "victory" || game.state === "defeat") {
+      if (game.endTimer > 0) return;
+      reset();
+      startGame();
+      return;
+    }
+    if (game.state !== "playing") return;
+    const p = game.player;
+    if (p.mouth === "ready") {
+      p.mouth = "biting";
+      p.mouthTimer = 0.12;
+      p.recoil = 1;
+      beep(135, 0.055, "square", 0.025, 90);
+    } else if (p.mouth === "holding" && game.shell) {
+      const angle = p.aimAngle;
+      p.facing = Math.cos(angle) >= 0 ? 1 : -1;
+      const mouth = mouthPosition2();
+      game.shell = {
+        state: "returned",
+        x: mouth.x + Math.cos(angle) * 8,
+        y: mouth.y - Math.sin(angle) * 8,
+        vx: Math.cos(angle) * 300,
+        vy: -Math.sin(angle) * 300,
+        rot: 0
+      };
+      p.mouth = "ready";
+      p.recoil = 1;
+      burst(mouth.x, mouth.y, [COLORS.sun, COLORS.cream], 7, 45, 2);
+      beep(210, 0.14, "sawtooth", 0.045, -85);
+    }
+  }
+  function resolveShell() {
+    game.shell = null;
+    if (game.state === "playing" && game.heli.health > 0) {
+      game.heli.mode = "wait";
+      game.heli.timer = 1;
+    }
+  }
+  function fireShell(attractMode = false) {
+    const h = game.heli;
+    const p = game.player;
+    const sx = h.x - h.dir * 3;
+    const sy = h.y + 15;
+    const tx = p.x;
+    const ty = p.y - 23;
+    const dx = tx - sx;
+    const dy = ty - sy;
+    const len = Math.hypot(dx, dy) || 1;
+    game.shell = {
+      state: "incoming",
+      x: sx,
+      y: sy,
+      vx: dx / len * 110,
+      vy: dy / len * 110,
+      rot: Math.atan2(dy, dx)
+    };
+    h.mode = "shell-out";
+    if (!attractMode) {
+      burst(sx, sy, [COLORS.sun, COLORS.orange, COLORS.cream], 9, 65, 3);
+      runtime.shake = 3;
+      beep(75, 0.22, "sawtooth", 0.06, -20);
+    }
+  }
+  function catchShell() {
+    const p = game.player;
+    const m = mouthPosition2();
+    p.mouth = "holding";
+    p.mouthTimer = 0;
+    p.recoil = 1;
+    p.aimAngle = p.facing > 0 ? 35 * Math.PI / 180 : 145 * Math.PI / 180;
+    game.shell = { state: "held", x: m.x, y: m.y, vx: 0, vy: 0, rot: 0 };
+    burst(m.x, m.y, [COLORS.cream, COLORS.sun, COLORS.white], 13, 75, 3);
+    runtime.shake = 4;
+    beep(520, 0.07, "square", 0.05, -180);
+    setTimeout(() => beep(170, 0.055, "square", 0.025, 70), 45);
+  }
+  function playerHit() {
+    const p = game.player;
+    p.flash = 0.65;
+    p.knockback = game.shell && game.shell.vx > 0 ? 1 : -1;
+    p.mouth = "ready";
+    burst(p.x, p.y - 22, [COLORS.danger, COLORS.cream], 17, 95, 4);
+    runtime.shake = 7;
+    beep(105, 0.28, "sawtooth", 0.07, -55);
+    missShell();
+  }
+  function missShell() {
+    if (game.state !== "playing") return;
+    const outcome = hutMissOutcome(game.hutsOnFire, HUT_XS.length);
+    game.hutsOnFire = outcome.hutsOnFire;
+    const hutX = HUT_XS[outcome.hutIndex] + 23;
+    burst(hutX, GROUND_Y - 23, [COLORS.sun, COLORS.orange, COLORS.danger, COLORS.smoke], 24, 85, 5);
+    game.shell = null;
+    if (outcome.isDefeat) {
+      game.state = "defeat";
+      game.endTimer = 5;
+      game.heli.mode = "stopped";
+      game.heli.timer = 0.35;
+    } else {
+      game.heli.mode = "wait";
+      game.heli.timer = 1;
+    }
+  }
+  function helicopterHit() {
+    const h = game.heli;
+    const outcome = helicopterHitOutcome(h.health);
+    h.health = outcome.health;
+    h.hitFlash = 0.7;
+    burst(h.x, h.y, [COLORS.sun, COLORS.orange, COLORS.danger, COLORS.cream], h.health ? 24 : 32, h.health ? 115 : 135, h.health ? 4 : 5);
+    runtime.shake = h.health ? 8 : 11;
+    beep(h.health ? 75 : 62, h.health ? 0.25 : 0.4, "sawtooth", 0.075, h.health ? 50 : -30);
+    resolveShell();
+    if (outcome.isFatal) {
+      game.state = "crashing";
+      h.mode = "crashing";
+      h.crashSpeed = 18;
+    }
+  }
+  function explodeHelicopter() {
+    const h = game.heli;
+    h.y = GROUND_Y - 22;
+    h.mode = "wrecked";
+    game.state = "exploding";
+    game.crashTimer = 1.15;
+    burst(h.x, GROUND_Y - 20, [COLORS.sun, COLORS.orange, COLORS.danger, COLORS.cream, COLORS.ink], 72, 175, 8);
+    runtime.shake = 15;
+    beep(52, 0.65, "sawtooth", 0.09, -20);
+    for (let i = 0; i < 5; i++) {
+      setTimeout(() => {
+        if (game.state === "exploding" || game.state === "victory") {
+          burst(h.x + random(-23, 23), GROUND_Y - random(10, 34), [COLORS.sun, COLORS.orange, COLORS.danger], 15, 135, 7);
+          runtime.shake = 8;
+          beep(random(55, 95), 0.16, "sawtooth", 0.028, -22);
+        }
+      }, 90 + i * 110);
+    }
+  }
+  function updateHelicopterPatrol(dt, attractMode = false) {
+    const h = game.heli;
+    if (h.mode === "wait" || h.mode === "shell-out") {
+      h.x += h.dir * 27 * dt;
+      if (h.x < 88) {
+        h.x = 88;
+        h.dir = 1;
+      }
+      if (h.x > 392) {
+        h.x = 392;
+        h.dir = -1;
+      }
+      if (h.mode === "wait") h.timer -= dt;
+      if (h.mode === "wait" && h.timer <= 0 && !game.shell) {
+        fireShell(attractMode);
+      }
+    }
+  }
+  function updateAttractMode(dt) {
+    updateHelicopterPatrol(dt, true);
+    const shell = game.shell;
+    if (!shell) return;
+    shell.x += shell.vx * dt;
+    shell.y += shell.vy * dt;
+    shell.rot = Math.atan2(shell.vy, shell.vx);
+    if (shell.y >= GROUND_Y - 1) {
+      burst(shell.x, GROUND_Y - 2, [COLORS.orange, COLORS.sun, COLORS.dirt], 16, 90, 4);
+    }
+    if (shell.y >= GROUND_Y - 1 || shell.x < -24 || shell.x > W + 24 || shell.y < -24) {
+      game.shell = null;
+      game.heli.mode = "wait";
+      game.heli.timer = 0.7;
+    }
+  }
+  function fireDefeatShell() {
+    const h = game.heli;
+    const p = game.player;
+    const sourceX = h.x - h.dir * 3;
+    const sourceY = h.y + 15;
+    const targetX = p.x;
+    const targetY = p.y - 23;
+    const distanceX = targetX - sourceX;
+    const distanceY = targetY - sourceY;
+    const length = Math.hypot(distanceX, distanceY) || 1;
+    game.shell = {
+      state: "defeat",
+      x: sourceX,
+      y: sourceY,
+      vx: distanceX / length * 210,
+      vy: distanceY / length * 210,
+      rot: Math.atan2(distanceY, distanceX)
+    };
+  }
+  function updateDefeatBombardment(dt) {
+    const h = game.heli;
+    const p = game.player;
+    const shell = game.shell;
+    if (!shell) {
+      h.timer -= dt;
+      if (h.timer <= 0) fireDefeatShell();
+      return;
+    }
+    shell.x += shell.vx * dt;
+    shell.y += shell.vy * dt;
+    shell.rot = Math.atan2(shell.vy, shell.vx);
+    if (overlapsCircleRect(shell.x, shell.y, 5, p.x - 9, p.y - 40, 18, 40)) {
+      burst(shell.x, shell.y, [COLORS.sun, COLORS.orange, COLORS.danger, COLORS.cream], 18, 105, 5);
+      game.shell = null;
+      h.timer = 0.18;
+    }
+  }
+  function update(dt) {
+    game.time += dt;
+    runtime.shake = Math.max(0, runtime.shake - dt * 22);
+    const p = game.player;
+    const h = game.heli;
+    p.flash = Math.max(0, p.flash - dt);
+    p.recoil = Math.max(0, p.recoil - dt * 8);
+    h.hitFlash = Math.max(0, h.hitFlash - dt);
+    h.flash += dt;
+    h.rotor += dt * (h.mode === "crashing" ? 9 : h.mode === "wrecked" ? 0 : 25);
+    if (game.state === "victory" || game.state === "defeat") {
+      game.endTimer = Math.max(0, game.endTimer - dt);
+    }
+    if ((game.state === "victory" || game.state === "defeat") && (keys.left || keys.right)) {
+      if (game.endTimer === 0) reset();
+    }
+    if (game.state === "intro" && (keys.left || keys.right)) startGame();
+    if (game.state === "intro") {
+      updateAttractMode(dt);
+    } else if (game.state === "playing") {
+      advancePlayer(p, keys, dt);
+      advanceMouthState(p, dt);
+      updateHelicopterPatrol(dt);
+      if (h.health === 1) {
+        h.smokeClock -= dt;
+        if (h.smokeClock <= 0) {
+          h.smokeClock = random(0.09, 0.17);
+          smokePuff(h.x + 10, h.y - 5);
+        }
+      }
+      if (game.shell) {
+        const s = game.shell;
+        if (s.state === "held") {
+          syncHeldShell(s, p);
+        } else {
+          s.x += s.vx * dt;
+          s.y += s.vy * dt;
+          s.rot = Math.atan2(s.vy, s.vx);
+          if (s.state === "incoming") {
+            if (canCatchIncomingShell(s, p)) {
+              catchShell();
+            } else if (overlapsCircleRect(s.x, s.y, 4, p.x - 9, p.y - 40, 18, 40)) {
+              playerHit();
+            }
+          } else if (s.state === "returned") {
+            if (overlapsCircleRect(s.x, s.y, 5, h.x - 24, h.y - 11, 48, 24)) {
+              helicopterHit();
+            }
+          }
+          if (game.shell === s && (s.y >= GROUND_Y - 1 || s.x < -24 || s.x > W + 24 || s.y < -24)) {
+            if (s.y >= GROUND_Y - 1) {
+              burst(s.x, GROUND_Y - 2, [COLORS.orange, COLORS.sun, COLORS.dirt], 16, 90, 4);
+              runtime.shake = 5;
+              beep(80, 0.18, "square", 0.035, -30);
+            }
+            if (s.state === "incoming") missShell();
+            else resolveShell();
+          }
+        }
+      }
+    } else if (game.state === "defeat") {
+      updateDefeatBombardment(dt);
+    } else if (game.state === "crashing") {
+      h.crashSpeed += 135 * dt;
+      h.y += h.crashSpeed * dt;
+      h.smokeClock -= dt;
+      if (h.smokeClock <= 0) {
+        h.smokeClock = 0.07;
+        smokePuff(h.x + random(-8, 8), h.y - 4);
+      }
+      if (h.y >= GROUND_Y - 22) explodeHelicopter();
+    } else if (game.state === "exploding") {
+      game.crashTimer -= dt;
+      h.smokeClock -= dt;
+      if (h.smokeClock <= 0) {
+        h.smokeClock = 0.1;
+        smokePuff(h.x + random(-18, 18), GROUND_Y - random(8, 24));
+      }
+      if (game.crashTimer <= 0) {
+        game.state = "victory";
+        game.endTimer = 5;
+      }
+    }
+    for (const particle of game.particles) {
+      particle.life -= dt;
+      particle.x += particle.vx * dt;
+      particle.y += particle.vy * dt;
+      particle.vy += particle.gravity * dt;
+      particle.vx *= Math.pow(0.3, dt);
+    }
+    game.particles = game.particles.filter((particle) => particle.life > 0);
+  }
+
+  // src/js/renderer.js
+  function rect(x, y, w, h, color) {
+    ctx.fillStyle = color;
+    ctx.fillRect(Math.round(x), Math.round(y), Math.round(w), Math.round(h));
+  }
+  function outlinedText(value, x, y, size, color = COLORS.cream, align = "left") {
+    ctx.font = `bold ${size}px ui-monospace, monospace`;
+    ctx.textAlign = align;
+    ctx.textBaseline = "top";
+    ctx.lineJoin = "miter";
+    ctx.miterLimit = 2;
+    ctx.lineWidth = size >= 20 ? 5 : 3;
+    ctx.strokeStyle = COLORS.ink;
+    ctx.strokeText(value, Math.round(x), Math.round(y));
+    ctx.fillStyle = color;
+    ctx.fillText(value, Math.round(x), Math.round(y));
+  }
+  function drawBackground() {
+    rect(0, 0, W, H, COLORS.sky);
+    rect(0, 124, W, 102, COLORS.sky2);
+    ctx.fillStyle = "#4d7190";
+    ctx.beginPath();
+    ctx.moveTo(0, 163);
+    ctx.lineTo(63, 105);
+    ctx.lineTo(124, 162);
+    ctx.lineTo(194, 112);
+    ctx.lineTo(259, 164);
+    ctx.lineTo(335, 101);
+    ctx.lineTo(418, 164);
+    ctx.lineTo(480, 119);
+    ctx.lineTo(480, 190);
+    ctx.lineTo(0, 190);
+    ctx.fill();
+    ctx.fillStyle = "#39596f";
+    ctx.beginPath();
+    ctx.moveTo(0, 169);
+    ctx.lineTo(82, 131);
+    ctx.lineTo(145, 173);
+    ctx.lineTo(229, 138);
+    ctx.lineTo(305, 174);
+    ctx.lineTo(390, 129);
+    ctx.lineTo(480, 169);
+    ctx.lineTo(480, 206);
+    ctx.lineTo(0, 206);
+    ctx.fill();
+    for (let i = 0; i < HUT_XS.length; i++) {
+      const x = HUT_XS[i];
+      const burning = i < game.hutsOnFire;
+      ctx.fillStyle = burning ? "#5b332f" : "#8f6b45";
+      ctx.beginPath();
+      ctx.moveTo(x - 3, GROUND_Y - 23);
+      ctx.lineTo(x + 23, GROUND_Y - 40);
+      ctx.lineTo(x + 49, GROUND_Y - 23);
+      ctx.fill();
+      rect(x, GROUND_Y - 23, 46, 23, burning ? "#7a4036" : "#c08a55");
+      rect(x + 18, GROUND_Y - 15, 11, 15, COLORS.ink);
+      rect(x + 6, GROUND_Y - 16, 7, 7, burning ? COLORS.orange : COLORS.sky2);
+      rect(x - 2, GROUND_Y - 26, 50, 4, burning ? COLORS.redDark : COLORS.dirt);
+      if (burning) {
+        const flicker = Math.sin(game.time * 13 + i * 1.7) * 2;
+        rect(x + 3, GROUND_Y - 34 - flicker, 7, 13 + flicker, COLORS.orange);
+        rect(x + 8, GROUND_Y - 39 + flicker, 6, 17 - flicker, COLORS.sun);
+        rect(x + 31, GROUND_Y - 35 + flicker, 8, 13 - flicker, COLORS.danger);
+        rect(x + 36, GROUND_Y - 42 - flicker, 6, 20 + flicker, COLORS.orange);
+        rect(x + 12, GROUND_Y - 48 - flicker, 8, 8, COLORS.smoke);
+        rect(x + 17, GROUND_Y - 55 - flicker, 10, 9, COLORS.deep);
+        rect(x + 34, GROUND_Y - 51 + flicker, 8, 9, COLORS.smoke);
+      }
+    }
+    rect(0, GROUND_Y, W, H - GROUND_Y, COLORS.ground);
+    rect(0, GROUND_Y, W, 4, COLORS.cream);
+    rect(0, GROUND_Y + 8, W, H - GROUND_Y - 8, COLORS.dirt);
+    for (let x = 5; x < W; x += 23) {
+      rect(x, GROUND_Y + 14 + x * 7 % 18, 8, 3, "#7a5a47");
+    }
+  }
+  function drawHelicopter() {
+    const h = game.heli;
+    const x = Math.round(h.x);
+    const grounded = h.mode === "crashing" || h.mode === "wrecked";
+    const y = Math.round(h.y + Math.sin(game.time * 5) * (grounded ? 0 : 2));
+    const flash = h.hitFlash > 0 && (h.hitFlash * 20 | 0) % 2 === 0;
+    const wrecked = h.mode === "wrecked";
+    const body = wrecked ? COLORS.ink : flash ? COLORS.sun : COLORS.white;
+    const shade = wrecked ? COLORS.deep : flash ? COLORS.cream : "#b9c6cb";
+    const glass = wrecked ? COLORS.danger : "#23445b";
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.scale(h.dir > 0 ? -1 : 1, 1);
+    if (wrecked) {
+      rect(-38, -13, 28, 3, COLORS.ink);
+      rect(9, -18, 31, 3, COLORS.ink);
+    } else {
+      rect(-42, -18, 84, 3, COLORS.ink);
+      rect(-23 + Math.sin(h.rotor) * 13, -21, 46, 3, COLORS.white);
+    }
+    rect(-2, -17, 4, 7, COLORS.ink);
+    rect(-10, -14, 10, 5, body);
+    rect(1, -14, 10, 5, body);
+    rect(-25, -8, 43, 19, body);
+    rect(-20, -12, 28, 5, body);
+    rect(-26, -4, 5, 10, body);
+    rect(-18, 7, 35, 5, shade);
+    rect(17, -3, 12, 10, body);
+    rect(27, -1, 20, 6, body);
+    rect(41, -10, 6, 11, body);
+    rect(45, -13, 3, 18, COLORS.ink);
+    rect(41, -14, 11, 3, COLORS.ink);
+    rect(41, 5, 11, 3, COLORS.ink);
+    rect(-21, -5, 10, 10, glass);
+    rect(-19, -4, 7, 8, "#6fa6b6");
+    rect(-9, -6, 13, 13, COLORS.ink);
+    rect(-8, -5, 11, 11, glass);
+    rect(6, -6, 10, 13, shade);
+    rect(8, -4, 6, 8, body);
+    rect(11, -3, 2, 2, COLORS.ink);
+    rect(-16, 12, 4, 6, COLORS.ink);
+    rect(9, 12, 4, 6, COLORS.ink);
+    rect(-22, 18, 43, 3, COLORS.ink);
+    rect(-18, 21, 35, 2, shade);
+    rect(-4, 8, 8, 10, COLORS.purple);
+    rect(-1, 15, 2, 5, COLORS.cream);
+    rect(-24, 7, 7, 3, COLORS.danger);
+    rect(18, 4, 14, 2, COLORS.danger);
+    ctx.restore();
+  }
+  function drawPlayer() {
+    const p = game.player;
+    const x = Math.round(p.x - p.knockback * 2);
+    const y = Math.round(p.y);
+    const bob = keys.left || keys.right ? Math.round(Math.sin(p.anim) * 1) : 0;
+    const flash = p.flash > 0 && (p.flash * 22 | 0) % 2 === 0;
+    const feather = flash ? COLORS.white : COLORS.cream;
+    const featherShade = flash ? COLORS.white : "#d8d3bd";
+    const beak = flash ? COLORS.white : COLORS.orange;
+    const shirt = flash ? COLORS.white : "#8f4e9b";
+    const mouthOpen = p.mouth === "biting";
+    ctx.save();
+    ctx.translate(x, y + bob);
+    ctx.scale(p.facing, 1);
+    rect(-9, -3, 7, 4, COLORS.ink);
+    rect(4, -3, 8, 4, COLORS.ink);
+    rect(-7, -7, 4, 6, "#314556");
+    rect(4, -7, 4, 6, "#314556");
+    rect(-10, -20, 19, 14, shirt);
+    rect(-12, -10, 23, 4, COLORS.redDark);
+    rect(-15, -19, 6, 12, featherShade);
+    rect(8, -18, 6, 11, feather);
+    rect(-6, -23, 12, 6, feather);
+    rect(-9, -39, 17, 18, feather);
+    rect(-7, -42, 5, 5, feather);
+    rect(-1, -44, 4, 5, feather);
+    rect(3, -42, 4, 4, featherShade);
+    rect(-12, -39, 5, 11, featherShade);
+    rect(3, -35, 4, 5, COLORS.white);
+    rect(5, -34, 2, 3, COLORS.ink);
+    rect(3, -37, 5, 2, COLORS.ink);
+    rect(6, -39, 2, 3, COLORS.ink);
+    rect(-10, -43, 5, 5, COLORS.danger);
+    rect(-15, -42, 6, 4, COLORS.danger);
+    rect(-9, -47, 3, 5, COLORS.redDark);
+    if (mouthOpen) {
+      rect(7, -32, 21, 5, beak);
+      rect(9, -26, 19, 5, beak);
+      rect(10, -27, 17, 2, COLORS.ink);
+      rect(25, -31, 4, 3, COLORS.sun);
+      rect(25, -24, 4, 3, COLORS.sun);
+    } else if (p.mouth === "holding") {
+      rect(7, -31, 22, 8, beak);
+      rect(9, -27, 19, 2, COLORS.ink);
+      rect(26, -29, 4, 4, COLORS.sun);
+    } else {
+      rect(7, -31, 23, 8, beak);
+      rect(9, -27, 20, 2, COLORS.redDark);
+      rect(27, -29, 4, 4, COLORS.sun);
+    }
+    if (p.recoil > 0) {
+      rect(-15, -23, 4, 4, COLORS.sun);
+      rect(-18, -19, 3, 3, COLORS.sun);
+    }
+    ctx.restore();
+  }
+  function drawShell(shell) {
+    if (!shell) return;
+    ctx.save();
+    ctx.translate(Math.round(shell.x), Math.round(shell.y));
+    ctx.rotate(shell.rot || 0);
+    rect(-8, -3, 11, 6, shell.state === "returned" ? COLORS.sun : COLORS.cream);
+    rect(2, -2, 6, 4, COLORS.ink);
+    rect(-10, -4, 3, 8, shell.state === "returned" ? COLORS.orange : COLORS.redDark);
+    if (shell.state === "returned") {
+      rect(-16, -2, 6, 4, COLORS.orange);
+      rect(-21, -1, 5, 2, COLORS.danger);
+    }
+    ctx.restore();
+  }
+  function drawAimGuide() {
+    const p = game.player;
+    if (p.mouth !== "holding" || game.state !== "playing") return;
+    const m = mouthPosition2();
+    const angle = p.aimAngle;
+    const pulse = 0.68 + Math.sin(game.time * 8) * 0.14;
+    ctx.globalAlpha = pulse;
+    ctx.strokeStyle = COLORS.sun;
+    ctx.setLineDash([3, 3]);
+    ctx.beginPath();
+    ctx.moveTo(m.x + Math.cos(angle) * 8, m.y - Math.sin(angle) * 8);
+    ctx.lineTo(m.x + Math.cos(angle) * 62, m.y - Math.sin(angle) * 62);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.globalAlpha = 1;
+  }
+  function drawParticles() {
+    for (const particle of game.particles) {
+      ctx.globalAlpha = clamp(particle.life / Math.min(particle.maxLife, 0.35), 0, 1);
+      const size = Math.max(1, Math.round(particle.size * (0.8 + (1 - particle.life / particle.maxLife) * 0.8)));
+      rect(particle.x - size / 2, particle.y - size / 2, size, size, particle.color);
+    }
+    ctx.globalAlpha = 1;
+  }
+  function drawOverlays() {
+    if (game.state === "intro" && Math.floor(game.time) % 2 === 0) {
+      outlinedText("BITE A HELICOPTER BULLET!!!", W / 2, H - 15, 9, COLORS.cream, "center");
+    }
+  }
+  function drawEndScreen() {
+    if (game.state !== "victory" && game.state !== "defeat") return;
+    if (game.state === "victory") {
+      outlinedText("FULLFILMENT", W / 2, 92, 26, COLORS.sun, "center");
+      outlinedText("helicopter destroyed", W / 2, 125, 13, COLORS.cream, "center");
+    } else {
+      outlinedText("DISSAPOINTING", W / 2, 92, 26, COLORS.danger, "center");
+      outlinedText("whole village burned", W / 2, 125, 13, COLORS.cream, "center");
+    }
+  }
+  function draw() {
+    ctx.save();
+    if (runtime.shake > 0) ctx.translate(Math.round(random(-runtime.shake, runtime.shake)), Math.round(random(-runtime.shake, runtime.shake)));
+    drawBackground();
+    drawAimGuide();
+    drawHelicopter();
+    drawPlayer();
+    drawShell(game.shell);
+    drawParticles();
+    drawOverlays();
+    drawEndScreen();
+    ctx.restore();
+  }
+
+  // src/js/main.js
+  var lastTime = performance.now();
+  function restart() {
+    if ((game.state === "victory" || game.state === "defeat") && game.endTimer > 0) return;
+    reset();
+  }
+  function frame(now) {
+    const dt = Math.min(0.033, (now - lastTime) / 1e3 || 0);
+    lastTime = now;
+    update(dt);
+    draw();
+    requestAnimationFrame(frame);
+  }
+  function setKey(code, down, repeat) {
+    if (code === "ArrowLeft" || code === "KeyA") keys.left = down;
+    if (code === "ArrowRight" || code === "KeyD") keys.right = down;
+    if (code === "ArrowUp" || code === "KeyW") keys.aimCCW = down;
+    if (code === "ArrowDown" || code === "KeyS") keys.aimCW = down;
+    if (down && !repeat && (code === "Space" || code === "KeyZ")) action();
+    if (down && !repeat && code === "KeyR") restart();
+  }
+  window.addEventListener("keydown", (event) => {
+    if (["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "Space"].includes(event.code)) event.preventDefault();
+    setKey(event.code, true, event.repeat);
+  });
+  window.addEventListener("keyup", (event) => setKey(event.code, false, false));
+  window.addEventListener("blur", () => Object.assign(keys, { left: false, right: false, aimCCW: false, aimCW: false }));
+  document.querySelectorAll("[data-control]").forEach((button) => {
+    const control = button.dataset.control;
+    const press = (event) => {
+      event.preventDefault();
+      button.classList.add("active");
+      if (control === "action") action();
+      else keys[control] = true;
+      button.setPointerCapture?.(event.pointerId);
+    };
+    const release = (event) => {
+      event.preventDefault();
+      button.classList.remove("active");
+      if (control !== "action") keys[control] = false;
+    };
+    button.addEventListener("pointerdown", press);
+    button.addEventListener("pointerup", release);
+    button.addEventListener("pointercancel", release);
+    button.addEventListener("contextmenu", (event) => event.preventDefault());
+  });
+  document.querySelector(".restart-button").addEventListener("click", restart);
+  function aimAtPointer(event) {
+    const p = game.player;
+    if (game.state !== "playing" || p.mouth !== "holding") return false;
+    const bounds = canvas.getBoundingClientRect();
+    const targetX = (event.clientX - bounds.left) * W / bounds.width;
+    const targetY = (event.clientY - bounds.top) * H / bounds.height;
+    const m = mouthPosition2();
+    const dx = targetX - m.x;
+    const dy = Math.max(0, m.y - targetY);
+    p.aimAngle = constrainAim(Math.atan2(dy, dx));
+    p.facing = Math.cos(p.aimAngle) >= 0 ? 1 : -1;
+    return true;
+  }
+  canvas.addEventListener("pointermove", (event) => {
+    if (event.pointerType === "mouse" || event.buttons > 0) aimAtPointer(event);
+  });
+  canvas.addEventListener("pointerdown", (event) => {
+    if (aimAtPointer(event)) event.preventDefault();
+    else if (game.state !== "playing") action();
+  });
+  reset();
+  requestAnimationFrame(frame);
+})();
+
+</script>
+</body>
+</html>
